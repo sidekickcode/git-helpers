@@ -17,7 +17,7 @@ npm install --save sidekick-git-helpers
 ```sh
 var helpers = require("sidekick-git-helpers");
 
-helpers.findRootGitRepo(process.cwd)
+helpers.findRootGitRepo(process.cwd())
 .then((r) => console.log(`the enclosing git repo is: ${r}`))
 .catch((e) => console.error(e));
 ```
