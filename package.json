@@ -6,6 +6,9 @@
   "directories": {
     "test": "test"
   },
+  "engines": {
+    "node": ">= 4.2.0"
+  },
   "scripts": {
     "test": "mocha"
   },
@@ -30,7 +33,7 @@
     "shelljs": "^0.6.0"
   },
   "dependencies": {
-    "bluebird": "^3.3.4",
+    "bluebird": "~2.9.14",
     "lodash": "^3.10.1"
   }
 }

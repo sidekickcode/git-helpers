@@ -33,8 +33,8 @@ describe('given a situation with modifications and additions in commits and work
 
 		var diffsByPath;
 
-		before(function(done) {
-			Promise.props(_.transform([
+		before(function() {
+			return Promise.props(_.transform([
 				"modifiedInCommit.js",
 				"addedInCommit.js",
 				"modifiedInWorkingCopy.js",
@@ -43,9 +43,8 @@ describe('given a situation with modifications and additions in commits and work
 				diffsByPath[path] = 
 					git.fileModifications(repo.path, path, _.last(commits).sha);
 			}, {}))
-			.nodeify(function(err, props) {
+			.then(function(props) {
 				diffsByPath = props;	
-				done(err);
 			});
 		});
 
@@ -86,11 +85,10 @@ describe('given a situation with modifications and additions in commits and work
 
 	describe('filesWithModifications', function() {
 
-		before(function(done) {
-			git.filesWithModifications(repo.path, _.last(commits).sha)
-			.nodeify(function(err, files) {
+		before(function() {
+			return git.filesWithModifications(repo.path, _.last(commits).sha)
+			.then(function(files) {
 				result = files;
-				done(err);
 			});
 		});
 
@@ -151,7 +149,7 @@ describe('given a situation with modifications and additions in commits and work
 
   describe('getting comparison targets', function() {
 
-    before(function(done) {
+    before(function() {
       var self = this;
 
       [
@@ -164,9 +162,8 @@ describe('given a situation with modifications and additions in commits and work
       this.head = _.first(commits);
       this.oneBehindHead = commits[1];
 
-      git.possibleComparisonTargets(repo.path, this.head)
-      .nodeify(function(err, targets) {
-        done(err);
+      return git.possibleComparisonTargets(repo.path, this.head)
+      .then(function(targets) {
         self.targets = targets;
       });
     });
@@ -306,15 +303,14 @@ describe('detecting unmerged files', function() {
 
 	var result;
 
-	before(function(done) {
+	before(function() {
 		this.setup = unmerged();
 		var repo = helpers.repository(this.setup);
 		var commits = repo.branches[0].processedCommits;
 
-		git.filesWithModifications(repo.path, _.last(commits).sha)
-		.nodeify(function(err, files) {
+		return git.filesWithModifications(repo.path, _.last(commits).sha)
+		.then(function(files) {
 			result = files;
-			done(err);
 		});
 	});
 		
@@ -332,7 +328,7 @@ describe('parsing symbolic refs in prepush', function() {
 
   var self;
 
-  before(function(done) {
+  before(function() {
     self = this;
 
 		this.setup = prepushRepo();
@@ -345,14 +341,13 @@ describe('parsing symbolic refs in prepush', function() {
     var cliArgs = ["origin", "https://github.com/timruffles/testy.git"];
 
 
-    git.prepush(cliArgs, stdin, this.repo.path)
-    .nodeify(function(err, parsed) {
-      done(err);
+    return git.prepush(cliArgs, stdin, this.repo.path)
+    .then(function(parsed) {
       self.parsedHead = parsed;
     })
   })
 
-  before(function(done) {
+  before(function() {
 
     var stdin =
 `REFFY 8ee0899950e5e2ebf30d4ae4796dae067aa8a6f9 refs/heads/other d4e1111e7170f1deab6709bba6fe15b42512ef74
@@ -360,14 +355,13 @@ describe('parsing symbolic refs in prepush', function() {
 
     var cliArgs = ["origin", "https://github.com/timruffles/testy.git"];
 
-    git.prepush(cliArgs, stdin, this.repo.path)
-    .nodeify(function(err, parsed) {
-      done(err);
+    return git.prepush(cliArgs, stdin, this.repo.path)
+    .then(function(parsed) {
       self.parsedReffy = parsed;
     })
   })
 
-  before(function(done) {
+  before(function() {
 
     var stdin =
 `refs/heads/master 8ee0899950e5e2ebf30d4ae4796dae067aa8a6f9 refs/heads/other d4e1111e7170f1deab6709bba6fe15b42512ef74
@@ -375,9 +369,8 @@ describe('parsing symbolic refs in prepush', function() {
 
     var cliArgs = ["origin", "https://github.com/timruffles/testy.git"];
 
-    git.prepush(cliArgs, stdin, this.repo.path)
-    .nodeify(function(err, parsed) {
-      done(err);
+    return git.prepush(cliArgs, stdin, this.repo.path)
+    .then(function(parsed) {
       self.parsedStandard = parsed;
     })
   })
@@ -395,14 +388,13 @@ describe('parsing symbolic refs in prepush', function() {
   })
 
   describe("empty push", function() {
-    before(function(done) {
+    before(function() {
       var stdin = "";
 
       var cliArgs = ["origin", "https://github.com/timruffles/testy.git"];
 
-      git.prepush(cliArgs, stdin, this.repo.path)
-      .nodeify(function(err, parsed) {
-        done(err);
+      return git.prepush(cliArgs, stdin, this.repo.path)
+      .then(function(parsed) {
         self.parsedReffy = parsed;
       })
     })
@@ -443,11 +435,10 @@ function pathsValid(paths) {
 
 xdescribe('commits between', function() {
   var commits;
-  before(function(done) {
-    git.commitsBetweenAsync(REPO_PATH, "27f6565eb7a55378bd5dc8fb34198a12e644d26b", "739c59a548ab170f0078d2d097d8d05b2ee682fc")
-    .nodeify(function(err, files) {
+  before(function() {
+    return git.commitsBetweenAsync(REPO_PATH, "27f6565eb7a55378bd5dc8fb34198a12e644d26b", "739c59a548ab170f0078d2d097d8d05b2ee682fc")
+    .then(function(files) {
       commits = files;
-      done(err, files);
     });
   })
 
@@ -461,14 +452,13 @@ describe('listing all files for analysis, without a comparison target', function
 
   var self;
 
-  before(function(done) {
+  before(function() {
     self = this;
 
 		this.setup = allFilesRepo();
 		this.repo = helpers.repository(this.setup);
 
-    git.allFiles(this.repo.path).nodeify(function(err, all) {
-      done(err);
+    return git.allFiles(this.repo.path).then(function(all) {
       self.found = all;
     });
   })
