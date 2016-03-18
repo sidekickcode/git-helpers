@@ -1,5 +1,5 @@
 {
-  "name": "sidekick-git-helpers",
+  "name": "@sidekick/git-helpers",
   "version": "1.0.1",
   "description": "git helpers that work with the git CLI. Probably only useful if you've got the same constraints as SK: x-platform without native deps",
   "main": "sidekick-git-helpers.js",
