@@ -90,17 +90,34 @@ Promise.promisifyAll(exports);
 /**
  * gives you modifications in commits, and in working copy
  */
-function filesWithModifications(repoPath, vsSha, cb) {
+function filesWithModifications(repoPath, target, cb) {
+  const workingCopy = {};
+  const parsedTarget = interpretTarget();
+
   // onlying use one char of two char status
   // TODO handle unmerged etc
+  const untrackingAndWorkingCopy = parsedTarget.after === workingCopy
+    ? Promise.join(findWorkingCopyChanges(repoPath), findUntrackedPathsInRepo(repoPath), (a,b) => a.concat(b))
+    : Promise.resolve([]);
 
-  return Promise.join(findCommittedChangesInRepoVsSha(repoPath, vsSha), findWorkingCopyChanges(repoPath), findUntrackedPathsInRepo(repoPath), function(inDiff, inStatus, untracked) {
-    return _(inDiff.concat(inStatus).concat(untracked))
+
+  const commitedChanges = findCommittedChangesInRepoVsSha(repoPath, parsedTarget.before, parsedTarget.after === workingCopy ? "HEAD" : parsedTarget.after);
+
+  return Promise.join(commitedChanges, untrackingAndWorkingCopy, function(inDiff, outsideOfCommits) {
+    return _(inDiff.concat(outsideOfCommits))
       .filter(hasPotentialModifications)
       .unique("path")
       .value();
   })
   .nodeify(cb); 
+
+  function interpretTarget() {
+    if(typeof target === 'string') {
+      return { before: target, after: workingCopy };
+    } else {
+      return { before: target.before || "HEAD", after: target.after || workingCopy };
+    }
+  }
 
 }
 
@@ -175,8 +192,8 @@ function allTrackedFilesInRepo(repoPath) {
   
 }
 
-function findCommittedChangesInRepoVsSha(repoPath, vsSha) {
-  return gitAtPath(repoPath, "diff --find-copies --find-renames --name-status %s", vsSha)
+function findCommittedChangesInRepoVsSha(repoPath, vsSha, after = "HEAD") {
+  return gitAtPath(repoPath, "diff --find-copies --find-renames --name-status %s %s", vsSha, after)
   .then(preprocessStdoutLines)
   .then(function(lines) {
     return compactMap(lines, parseLineFromGitDiff);

@@ -85,56 +85,111 @@ describe('given a situation with modifications and additions in commits and work
 
 	describe('filesWithModifications', function() {
 
-		before(function() {
-			return git.filesWithModifications(repo.path, _.last(commits).sha)
-			.then(function(files) {
-				result = files;
-			});
-		});
+    describe("with single sha", function() {
+      before(function() {
+        const oldest = _.last(commits).sha;
+        return git.filesWithModifications(repo.path, oldest)
+        .then(function(files) {
+          result = files;
+        });
+      });
 
-		it('contains files modified in commits', function() {
-			assertFile("modifiedInCommit.js");
-		})
+      it('contains files modified in commits', function() {
+        assertFile("modifiedInCommit.js");
+      })
 
-		it('contains files added in commits', function() {
-			assertFile("addedInCommit.js");
-		})
+      it('contains files added in commits', function() {
+        assertFile("addedInCommit.js");
+      })
 
-		it('contains files modified in working copy', function() {
-			assertFile("modifiedInWorkingCopy.js");
-		})
+      it('contains files modified in working copy', function() {
+        assertFile("modifiedInWorkingCopy.js");
+      })
 
-		it('contains files added in working copy', function() {
-			assertFile("addedInWorkingCopy.js");
-		})
+      it('contains files added in working copy', function() {
+        assertFile("addedInWorkingCopy.js");
+      })
 
-		it('contains files staged', function() {
-			assertFile("stagedInWorkingCopy.js");
-		})
+      it('contains files staged', function() {
+        assertFile("stagedInWorkingCopy.js");
+      })
 
-		it('ignores files deleted', function() {
-			refuteFile("deletedInWorkingCopy.js");
-		})
+      it('ignores files deleted', function() {
+        refuteFile("deletedInWorkingCopy.js");
+      })
 
-		it('handles adding deep', function() {
-			assertFile("deep/path/addedInWorkingCopy.js");
-		})
+      it('handles adding deep', function() {
+        assertFile("deep/path/addedInWorkingCopy.js");
+      })
 
-		it('handles additions in untracked directories', function() {
-			assertFile("untracked/path/untrackedInWorkingCopy.js");
-		})
+      it('handles additions in untracked directories', function() {
+        assertFile("untracked/path/untrackedInWorkingCopy.js");
+      })
 
-		it('handles untracked', function() {
-			assertFile("untrackedInWorkingCopy.js");
-		})
+      it('handles untracked', function() {
+        assertFile("untrackedInWorkingCopy.js");
+      })
 
-		it('handles additions in deep tracked directories', function() {
-			assertFile("deep/path/addedInCommit.js");
-		})
+      it('handles additions in deep tracked directories', function() {
+        assertFile("deep/path/addedInCommit.js");
+      })
 
-		pathsValid(function() {
-			return result;	
-		});
+      pathsValid(function() {
+        return result;	
+      });
+    })
+
+    describe("with before and after", function() {
+      before(function() {
+        // commits in reverse time order
+        return git.filesWithModifications(repo.path, { before: _.last(commits).sha, after: _.first(commits).sha })
+        .then(function(files) {
+          result = files;
+        });
+      });
+
+      it('contains files modified in commits', function() {
+        assertFile("modifiedInCommit.js");
+      })
+
+      it('contains files added in commits', function() {
+        assertFile("addedInCommit.js");
+      })
+
+      it('ignores files modified in working copy', function() {
+        refuteFile("modifiedInWorkingCopy.js");
+      })
+
+      it('ignores files added in working copy', function() {
+        refuteFile("addedInWorkingCopy.js");
+      })
+
+      it('ignores files staged', function() {
+        refuteFile("stagedInWorkingCopy.js");
+      })
+
+      it('ignores files deleted', function() {
+        refuteFile("deletedInWorkingCopy.js");
+      })
+
+      it('ignores additions in untracked directories', function() {
+        refuteFile("untracked/path/untrackedInWorkingCopy.js");
+      })
+
+      it('ignores untracked', function() {
+        refuteFile("untrackedInWorkingCopy.js");
+      })
+
+      it('sees committed additions in deep tracked directories', function() {
+        assertFile("deep/path/addedInCommit.js");
+      })
+
+      pathsValid(function() {
+        return result;	
+      });
+    })
+
+
 				
 		function assertFile(f) {
 			var paths = _.pluck(result, "path");
