@@ -134,7 +134,7 @@ function allFiles(repoPath, cb) {
 }
 
 function hasPotentialModifications(file) {
-  return statesThatImplyModification.has(file.action) ||
+  return include(statesThatImplyModification, file.action) ||
     lessThanCompleteRenameOrCopy(file.action);
   function lessThanCompleteRenameOrCopy(rn) {
     // Rename and copies look like R100, C44
@@ -397,12 +397,12 @@ const STATES = exports.ACTIONS = {
   "TRACKED": "tracked",
 };
 
-const statesThatImplyModification = new Set([
+const statesThatImplyModification = [
   STATES.ADD,
   STATES.COPY,
   STATES.UNTRACKED,
   STATES.MODIFIED
-]);
+];
 
 
 function parseDiffOutput(str) {
@@ -410,8 +410,12 @@ function parseDiffOutput(str) {
     .filter(notEmptyLine)
     .map(parseDiffTreeLine)
     .filter(function(action) {
-      return !IGNORE_STATES.has(action);
+      return !include(IGNORE_STATES, action);
     });
+}
+
+function include(xs, x) {
+  return xs.indexOf(x) !== -1; 
 }
 
 function notEmptyLine(line) {
@@ -430,11 +434,11 @@ const stateLookups = {
   '?': STATES.UNTRACKED,
   X: STATES.UNKNOWN
 };
-const IGNORE_STATES = new Set([
+const IGNORE_STATES = [
   STATES.UNMERGED,
   STATES.UNKNOWN,
   STATES.TYPE,
-]);
+];
 
 const diffTreeLineRe = /^:\d+ \d+ ([a-f0-9]+) ([a-f0-9]+) (\w)/i;
 

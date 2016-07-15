@@ -85,6 +85,8 @@ describe('given a situation with modifications and additions in commits and work
 
 	describe('filesWithModifications', function() {
 
+    var result;
+
     describe("with single sha", function() {
       before(function() {
         const oldest = _.last(commits).sha;
